@@ -12,10 +12,8 @@ import backend.exceptions.CadenaLargaException;
 import backend.exceptions.CadenaVaciaException;
 import backend.exceptions.NumeroNegativoException;
 import backend.exceptions.ParametroNullException;
-import backend.modelos.Rol;
 import backend.modelos.Usuario;
 import backend.modelos.Rol;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,7 +28,62 @@ public class UsuarioDAO implements InterfazDAO<Usuario>{
 
     @Override
     public ArrayList<Usuario> obtenerRegistros() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        ArrayList<Usuario> tabla = new ArrayList<>();
+        String sql = "SELECT Usuarios.idUsuario, " +
+                "Usuarios.nombre1, " +
+                "Usuarios.apellido1, " +
+                "Usuarios.apellido2, " +
+                "Usuarios.telefono, " +
+                "Usuarios.usuario, " +
+                "Usuarios.contrasenia, " +
+                "Usuarios.estadoUsuario, " +
+                "Usuarios.nivelAcceso, " +
+                "Usuarios.idRol, " +
+                "Roles.nombreRol, " +
+                "Usuarios.imagen, " +
+                "Usuarios.salario " +
+                "FROM Usuarios " +
+                "INNER JOIN Roles ON Usuarios.idRol=Roles.idRol";
+        ConexionDB conexionDB = new ConexionDB();
+        try(
+                Connection conn= conexionDB.conectar();
+                PreparedStatement prep = conn.prepareStatement(sql);
+                ResultSet rs = prep.executeQuery()) {
+            try {
+                while (rs.next()){
+                    Usuario usuario = new Usuario();
+                    usuario.setIdUsuario(rs.getInt("idUsuario"));
+                    usuario.setNombre1(rs.getString("nombre1"));
+                    usuario.setNombre2(rs.getString("nombre1"));
+                    usuario.setApellido1(rs.getString("apellido1"));
+                    usuario.setApellido2(rs.getString("apellido2"));
+                    usuario.setTelefono(rs.getString("telefono"));
+                    usuario.setUsuario(rs.getString("usuario"));
+                    usuario.setContrasenia(rs.getString("contrasenia"));
+                    usuario.setEstadoUsuario(EstadoUsuario.valueOf(rs.getString("estadoUsuario")));
+                    usuario.setNivelAcceso(NivelAcceso.valueOf(rs.getString(sql)));
+                    Rol rol = new Rol();
+                    rol.setIdRol(rs.getInt("idRol"));
+                    rol.setNombreRol(rs.getString("nombreRol"));
+                    usuario.setRol(rol);
+                    usuario.setImagen(rs.getBytes("imagen"));
+                    usuario.setSalario(rs.getBigDecimal("salario"));
+                }
+            } catch (ParametroNullException ex) {
+                System.getLogger(ConexionDB.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            } catch (CadenaLargaException ex) {
+                System.getLogger(ConexionDB.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            } catch (CadenaInvalidaException ex) {
+                System.getLogger(ConexionDB.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            } catch (CadenaVaciaException ex) {
+                System.getLogger(ConexionDB.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            } catch (NumeroNegativoException ex) {
+                System.getLogger(ConexionDB.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+        } catch (SQLException ex) {
+            System.getLogger(ConexionDB.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+        return tabla;
     }
 
     @Override
@@ -56,9 +109,9 @@ public class UsuarioDAO implements InterfazDAO<Usuario>{
                 "FROM Usuarios " +
                 "INNER JOIN Roles ON Usuarios.idRol=Roles.idRol " +
                 "WHERE Usuarios.usuario=? AND Usuarios.contrasenia=?";
-        ConexionDB conexion = new ConexionDB();
+        ConexionDB conexionDB = new ConexionDB();
         try (
-                Connection con = conexion.conectar();
+                Connection con = conexionDB.conectar();
                 PreparedStatement prep = con.prepareStatement(sql);
                 ) {
             prep.setString(1, usuario);
